@@ -37,7 +37,8 @@ activity.csv.  The file contains three columns:
 * interval: The number of the starting hour and minute of the interval
   within the day, in the form hhmm, but with leading zeros omitted.
 
-```{r}
+
+```r
 filename <- "activity"
 zipname = sprintf("%s.zip", filename)
 csvname = sprintf("%s.csv", filename)
@@ -52,6 +53,13 @@ activity <- read.csv(csvname, na.strings="NA", colClasses=c(NA, "Date", NA))
 str(activity)
 ```
 
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
+
 ### Mean, median, and distribution of the total number of steps taken per day
 
 First, let's examine some summary statistics and the distribution of the
@@ -59,13 +67,20 @@ total number of steps per day.  Here, we ignore missing values (some intervals
 near the start and end of the data collection have no data), which will skew
 the mean and show some days with very low numbers of steps.
 
-```{r}
+
+```r
 total_per_day <- tapply(activity$steps, activity$date, "sum", na.rm=TRUE)
 mean_per_day <- mean(total_per_day)
 median_per_day <- median(total_per_day)
 print(sprintf("Mean steps per day = %f, median steps per day = %f",
               mean_per_day, median_per_day))
+```
 
+```
+## [1] "Mean steps per day = 9354.229508, median steps per day = 10395.000000"
+```
+
+```r
 # The max number of steps per day is a little under 21200. Use 1500 steps per
 # bin, which will yield 15 bins.
 steps_per_bin <- 1500
@@ -76,6 +91,8 @@ hist(total_per_day, breaks=breaks,
      xlab="Steps per day",
      col=rgb(0, 0, 1, 0.25))
 ```
+
+![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2-1.png) 
 
 ### Average daily activity pattern
 
@@ -113,7 +130,8 @@ activity that is repeated reliably every day, and involves the same
 activity level, may nonetheless contribute to the variability, if the time
 of the activity shifts by an amount large compared to its duration.
 
-```{r}
+
+```r
 # Compute the mean, slicing across the days by interval.
 mean_per_interval <- tapply(activity$steps, activity$interval, "mean",
                             na.rm=TRUE)
@@ -217,17 +235,31 @@ legend("topright",
        col=c("black", "grey75", "red"))
 ```
 
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png) 
+
 ### Imputing missing values
 
 There are a number of missing activity values, which may skew results.
 
-```{r}
+
+```r
 num_missing <- sum(is.na(activity$steps))
 pct_missing <- (num_missing * 100) / length(activity$steps)
 
 print(sprintf("Number of intervals with missing activity data is %d.",
               num_missing))
+```
+
+```
+## [1] "Number of intervals with missing activity data is 2304."
+```
+
+```r
 print(sprintf("This is %f percent of the total.", pct_missing))
+```
+
+```
+## [1] "This is 13.114754 percent of the total."
 ```
 
 We can attempt to infer reasonable values for the missing intervals.
@@ -244,7 +276,8 @@ Options include:
 
 Are there any intervals that have no data across all days?  
 
-```{r}
+
+```r
 activity$missing <- sapply(activity$steps, is.na)
 missing_for_interval <- split(activity$missing, activity$interval)
 all_missing_for_interval <- sapply(missing_for_interval, all)
@@ -255,6 +288,10 @@ if (num_all_missing_for_interval > 0) {
 } else {
     print("All intervals have at least some data.")
 }
+```
+
+```
+## [1] "All intervals have at least some data."
 ```
 
 Since we know that there is no interval that is missing data across all
@@ -269,7 +306,8 @@ dataset will be used without knowledge that some of the data is inferred.
 Nevertheless, we've been asked to make a separate dataset with the
 missing values filled in.
 
-```{r}
+
+```r
 # Helper for looking up an interval in the array of average activity.
 # This is much the same as the function that computes the seconds since
 # midnight, except that the index is the number of 5-minute intervals
@@ -309,13 +347,18 @@ print(sprintf(paste("Modified activity dataset, with missing",
               csvname_inferred))
 ```
 
+```
+## [1] "Modified activity dataset, with missing steps values inferred as the average over days for the corresponding interval has been written to activity_inferred.csv"
+```
+
 Since we used the average activity to fill in missing values, the
 average activity pattern including the missing values should be
 identical to the original.  As a sanity check, show this by plotting
 the original, then the inferred average activity over it -- the
 inferred values exactly overlie the originals.
 
-```{r}
+
+```r
 # Compute and plot the average daily activity using the inferred data.
 # (The na.rm=TRUE is a no-op here.)
 mean_per_interval_inferred <- tapply(activity_inferred$steps,
@@ -338,6 +381,8 @@ legend("topright", legend=c("Unmodified data", "With missing values inferred"),
        col=c("black", "red"))
 ```
 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
+
 How did replacing missing values by inferred values affect the distribution of
 the total number of steps per day?  Since the missing values were effectively
 zero, and the inferred values may be postive, then we expect the totals per day
@@ -354,16 +399,30 @@ Repeat the computation of the mean, median, and distribution of the total
 steps per day, using the inferred data.  Report the change in the mean and
 median, and show the two histograms overlaid on the same plot.
 
-```{r}
+
+```r
 total_per_day_inferred <- tapply(activity_inferred$steps,
                                  activity_inferred$date, "sum", na.rm=TRUE)
 mean_per_day_inferred <- mean(total_per_day_inferred)
 median_per_day_inferred <- median(total_per_day_inferred)
 print(sprintf("Mean steps per day including inferred data = %f",
               mean_per_day_inferred))
+```
+
+```
+## [1] "Mean steps per day including inferred data = 10766.188679"
+```
+
+```r
 print(sprintf("Median steps per day including inferred data= %f",
               median_per_day_inferred))
+```
 
+```
+## [1] "Median steps per day including inferred data= 10766.188679"
+```
+
+```r
 # Use the same number of steps per bin as before.
 # steps_per_bin <- 1500
 num_bins_inferred <- ceiling(max(total_per_day_inferred) / steps_per_bin)
@@ -374,10 +433,13 @@ hist(total_per_day_inferred, breaks=breaks_inferred,
      col=c(rgb(1, 0, 0, 0.25)))
 ```
 
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png) 
+
 Compare the means and medians with and without the inferred data, and show
 both histograms together.
 
-```{r}
+
+```r
 delta_mean <- mean_per_day_inferred - mean_per_day
 mean_change <- "greater than"
 if (delta_mean < 0) {
@@ -388,7 +450,13 @@ if (delta_mean < 0) {
 print(sprintf(paste("The mean total steps per day with the inferred data",
                     "is %s without the inferred data, by %s steps."),
               mean_change, abs(delta_mean)))
+```
 
+```
+## [1] "The mean total steps per day with the inferred data is greater than without the inferred data, by 1411.95917104856 steps."
+```
+
+```r
 delta_median <- median_per_day_inferred - median_per_day
 median_change <- "greater than"
 if (delta_median < 0) {
@@ -399,7 +467,13 @@ if (delta_median < 0) {
 print(sprintf(paste("The median total steps per day with the inferred data",
                     "is %s without the inferred data, by %s steps."),
               median_change, abs(delta_median)))
+```
 
+```
+## [1] "The median total steps per day with the inferred data is greater than without the inferred data, by 371.188679245282 steps."
+```
+
+```r
 # Plot both histograms on the same axes.  Use transparent colors so both
 # show through.  Plot the inferred data first as it may use more bins, so
 # it may need a longer x range.
@@ -418,6 +492,8 @@ legend("topright",
        col=c(rgb(1, 0, 0, 0.25), rgb(0, 0, 1, 0.25)))
 ```
 
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png) 
+
 ### Are there differences in activity patterns between weekdays and weekends?
 
 An obvious question is, does the subject's activity differ on weekends?
@@ -429,7 +505,8 @@ Add a factor column to distinguish between weekdays and weekends.
 Split the data between weekdays and weekends, and repeat the computation
 of the average activity pattern on each split.
 
-```{r}
+
+```r
 # Add a column to differentiate weekdays and weekends.
 is_weekend <- function(date) {
     day_of_week <- as.POSIXlt(date)$wday
@@ -477,7 +554,8 @@ there is more activity during the day, and less of a large peek in the
 morning.  This may indicate the subject's job does not involve physical
 activity, i.e. they may be sitting at a desk during the day, but going
 for a morning run.
-```{r}
+
+```r
 # Plot both.
 # Lump the two sets of interval values together to compute the time axis
 # range.
@@ -520,9 +598,12 @@ box(which="outer", lty="solid")
 mtext("Average daily activity pattern", outer=TRUE, cex=1.5)
 ```
 
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 
+
 It may show the difference more clearly to superimpose the two patterns.
 
-```{r}
+
+```r
 # Would prefer to plot them superimposed -- it's easier to see how they differ.
 par(mfrow=c(1, 1), mar=c(4, 2, 2, 2), oma=c(0, 0, 0, 0))
 plot(weekend_mean_per_interval$interval_seconds,
@@ -542,3 +623,5 @@ legend("topright", legend=c("Weekend activity", "Weekday activity"),
        lty=1, bty="n",
        col=c("black", "red"))
 ```
+
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
